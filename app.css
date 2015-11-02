@@ -1,0 +1,23 @@
+.t-wrapper {
+  width: 400px;
+  height: 580px;
+  background: grey;
+  margin: auto;
+  position: relative;
+}
+
+.t-container {
+  width: 400px;
+  height: 500px;
+  border: 1px solid black;
+  position: absolute;
+  top: 79px;
+  left: -1px;
+}
+
+.t-element {
+  width: 20px;
+  height: 20px;
+  background: blue;
+  position: absolute;
+}
