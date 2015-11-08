@@ -1,13 +1,19 @@
+body {
+  background: #000;
+}
+
 .t-wrapper {
-  width: 400px;
+  width: 200px;
   height: 280px;
-  background: grey;
+  background: #fff;
   margin: auto;
   position: relative;
+  border: 5px solid #fff;
+  border-radius: 5px;
 }
 
 .t-container {
-  width: 400px;
+  width: 200px;
   height: 200px;
   border: 1px solid black;
   position: absolute;

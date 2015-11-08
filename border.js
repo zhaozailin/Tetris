@@ -6,13 +6,21 @@ var border = (function(blockFactory) {
     var config = {
         maxHeight: 280,
         minWidth: 0,
-        maxWidth: 400
+        maxWidth: 200
     };
 
     var activeBlock = null;
 
     // 存储落地方块的集合
     var fallBlocks = [];
+
+    // 将方块对象转为fallBlocks元素
+    var _insertFallBlocks = function(block) {
+        var coordinate = block.coordinateInfo.coordinate;
+        for (var i = 0; i < block.els.length; i++) {
+            fallBlocks.push({el: block.els[i], coordinate: coordinate[i]});
+        }
+    };
 
     // 触发移动
     var move = function(block, direction) {
@@ -33,7 +41,11 @@ var border = (function(blockFactory) {
 
         // 向下移动到达底线或发生碰撞时创建新的方块实例
         if (direction === "down" && (boundaryCheck || _checkEncounter(tryCoordinate))) {
-            fallBlocks.push(block);
+            _insertFallBlocks(block);
+            console.log(fallBlocks);
+            // 检测满行
+            _handleFullRow(block);
+
             _renderBlock();
             return;
         }
@@ -47,18 +59,130 @@ var border = (function(blockFactory) {
         block.move(tryCoordinate, direction);
     };
 
+    // 清理fallBlocks
+    var _clearFallBlocks = function(fullBlockIdx) {
+        var newFallBlocks = [];
+        for (var i = 0; i < fallBlocks.length; i++) {
+            var tmpBlock = fallBlocks[i];
+
+            if (fullBlockIdx.indexOf(i) !== -1) {
+                $(tmpBlock.el).remove();
+            }
+            else {
+                newFallBlocks.push(tmpBlock);
+            }
+        }
+
+        // 重置新的fallBlocks
+        fallBlocks = newFallBlocks;
+    };
+
+    // 处理满行
+    var _handleFullRow = function(block) {
+
+        // 获取当前方块中所有的坐标y的集合
+        var ys = [];
+        var coordinate = block.coordinateInfo.coordinate;
+        for (var i = 0; i < coordinate.length; i++) {
+            if (ys.indexOf(coordinate[i].y) === -1) {
+                ys.push(coordinate[i].y);
+            }
+        }
+
+        // 满行的行数
+        var rowNum = 0;
+
+        // 满行的y坐标
+        var fullYs = [];
+
+        // 分别判断每个y是否存在满行
+        for (var i = 0; i < ys.length; i++) {
+            var curY = ys[i];
+
+            // 检测y坐标是否满行
+            var fullBlockIdx = _checkFullRow(curY);
+            if (fullBlockIdx.length > 0) {
+                rowNum++;
+
+                // 清理fallBlocks
+                _clearFallBlocks(fullBlockIdx);
+
+                fullYs.push(curY);
+            }
+        }
+
+        console.log(rowNum);
+
+        // 满行以上的元素下降20 * rowNum像素
+        if (rowNum > 0) {
+
+            // 首先计算出被消除el的最小的y
+            var minY = Math.min.apply(window, fullYs);
+
+            // 将y坐标小于minY的el下移20 * rowNum
+            for (var i = 0; i < fallBlocks.length; i++) {
+                var tmpBlock = fallBlocks[i];
+                var tmpCoordinate = tmpBlock.coordinate;
+                if (tmpCoordinate.y < minY) {
+                    tmpCoordinate.y = tmpCoordinate.y + 20 * rowNum;
+                    tmpBlock.el.style.top = tmpCoordinate.y + "px";
+                }
+            }
+        }
+    };
+
+    // 检测y坐标是否满行
+    var _checkFullRow = function(curY) {
+
+        // 存储满行元素的索引，用于清理fallBlocks集合
+        var fullBlockIdx = [];
+
+        var span = config.maxWidth - config.minWidth;
+        var elAmount = span / 20;
+
+        // 是否满行
+        var fullFlag = true;
+
+        for (var i = 0; i < elAmount; i++) {
+
+            // 需要检测的点
+            var detectCoordinate = {x: 0 + 20 * i, y: curY};
+
+            var existFlag = false;
+            for (var j = 0; j < fallBlocks.length; j++) {
+                var tmpBlock = fallBlocks[j];
+                var tmpCoordinate = tmpBlock.coordinate;
+                if (detectCoordinate.x === tmpCoordinate.x && detectCoordinate.y === tmpCoordinate.y) {
+                    existFlag = true;
+                    fullBlockIdx.push(j);
+                    break;
+                }
+            }
+
+            // 不存在满行
+            if (!existFlag) {
+                fullFlag = false;
+                break;
+            }
+        }
+
+        // 存在满行的索引
+        if (fullFlag) {
+            return fullBlockIdx;
+        }
+
+        return [];
+    };
+
     // 检查碰撞
     var _checkEncounter = function(tryCoordinate) {
         for (var i = 0; i < fallBlocks.length; i++) {
-            var coordinate = fallBlocks[i].coordinateInfo.coordinate;
-            for (var j = 0; j < coordinate.length; j++) {
-                var tmp = coordinate[j];
-                for (var k = 0; k < tryCoordinate.length; k++) {
+            var coordinate = fallBlocks[i].coordinate;
+            for (var k = 0; k < tryCoordinate.length; k++) {
 
-                    // 发生碰撞
-                    if (tryCoordinate[k].y === tmp.y && tryCoordinate[k].x === tmp.x) {
-                        return true;
-                    }
+                // 发生碰撞
+                if (tryCoordinate[k].y === coordinate.y && tryCoordinate[k].x === coordinate.x) {
+                    return true;
                 }
             }
         }
