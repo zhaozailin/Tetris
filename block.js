@@ -1,46 +1,50 @@
 /**
  * Created by zhaozl on 2015/11/2.
  */
-var block = (function() {
+var Block = function(els, coordinateInfo) {
+    this.els = els;
+    this.coordinateInfo = coordinateInfo;
 
-    // 创建一个随机形状的块
-    var create = function() {
-        var coordinateInfo = _randomCoordinate();
+    // 获取最左边元素坐标
+    var _getLeftCoordinate = function() {
         var coordinate = coordinateInfo.coordinate;
 
-        var els = [];
+        var idx = 0;
+        var left = coordinate[0].x;
         for (var i = 0; i < coordinate.length; i++) {
-            var el = document.createElement("div");
-            el.className = "t-element";
-            el.style.left =  coordinate[i].x + "px";
-            el.style.top =  coordinate[i].y + "px";
-            els.push(el);
+            if (coordinate[i].x < left) {
+                idx = i;
+                left = coordinate[i].x;
+            }
         }
 
-        return {els: els, coordinateInfo: coordinateInfo};
+        return coordinate[idx];
     };
 
-    // 随机产生一组坐标
-    _randomCoordinate = function() {
-        switch(Math.floor((Math.random() * 10))) {
+    // 获取最右边元素坐标
+    var _getRightCoordinate = function() {
+        var coordinate = coordinateInfo.coordinate;
 
-            // Z形
-            case 0:
-                return {coordinate: [{x: 20, y: 0}, {x: 0, y: 20}, {x: 20, y: 20}, {x: 0, y: 40}], originIdx: 2};
-
-            // 山形
-            case 1:
-                return {coordinate: [{x: 20, y: 0}, {x: 0, y: 20}, {x: 20, y: 20}, {x: 40, y: 20}], originIdx: 2};
-
-            // 短一形
-            case 2:
-                return {coordinate: [{x: 0, y: 0}, {x: 20, y: 0}, {x: 40, y: 0}], originIdx: 1};
-
-            // 默认为短一形
-            default:
-                return {coordinate: [{x: 0, y: 0}, {x: 20, y: 0}, {x: 40, y: 0}], originIdx: 1};
+        var idx = 0;
+        var right = 0;
+        for (var i = 0; i < coordinate.length; i++) {
+            if (coordinate[i].x > right) {
+                idx = i;
+                right = coordinate[i].x;
+            }
         }
+
+        return coordinate[idx];
     };
+
+    // 默认最底部的元素为方块的最后一个，每次变形重置
+    this.bottomCoordinate = coordinateInfo.coordinate[coordinateInfo.coordinate.length - 1];
+
+    // 获取最右边元素坐标
+    this.rightCoordinate = _getRightCoordinate();
+
+    // 获取最左边元素坐标
+    this.leftCoordinate = _getLeftCoordinate();
 
     // 转化坐标
     // 转化逻辑：根据转动圆心的坐标算出相对圆心的相对坐标，然后通过公式：(a,b)-->(b,-a)，最后通过加上圆心坐标算出最终的坐标
@@ -53,15 +57,65 @@ var block = (function() {
         return [tmp[0] + origin[0], tmp[1] + origin[1] - 20];
     };
 
-    // 上(变形)
-    var up = function(block) {
+    // 变形
+    this.changeShape = function(tryCoordinate) {
 
         // 原始坐标数组
-        var coordinate = block.coordinateInfo.coordinate;
-        console.log(coordinate);
+        var coordinate = this.coordinateInfo.coordinate;
 
         // 原始坐标零点索引
-        var originIdx = block.coordinateInfo.originIdx;
+        var originIdx = this.coordinateInfo.originIdx;
+
+        var leftIdx = 0;
+        var leftX = coordinate[0].x;
+
+        var rightIdx = 0;
+        var rightX = 0;
+
+        var bottomIdx = 0;
+        var bottomY = 0;
+
+        for (var i = 0; i < tryCoordinate.length; i++) {
+            if (i !== originIdx) {
+                this.els[i].style.left = tryCoordinate[i].x + "px";
+                this.els[i].style.top = tryCoordinate[i].y + "px";
+
+                // 同步坐标
+                coordinate[i].x = tryCoordinate[i].x;
+                coordinate[i].y = tryCoordinate[i].y;
+
+                if (coordinate[i].y > bottomY) {
+                    bottomIdx = i;
+                    bottomY = coordinate[i].y;
+                }
+
+                if (coordinate[i].x > rightX) {
+                    rightIdx = i;
+                    rightX = coordinate[i].x;
+                }
+
+                if (coordinate[i].x < leftX) {
+                    leftIdx = i;
+                    leftX = coordinate[i].x;
+                }
+            }
+        }
+
+        // 每次变形都计算出最底部的元素坐标、最右边的元素坐标、最左边的元素坐标
+        this.bottomCoordinate = coordinate[bottomIdx];
+        this.rightCoordinate = coordinate[rightIdx];
+        this.leftCoordinate = coordinate[leftIdx];
+    };
+
+    // 尝试变形
+    this.tryChange = function() {
+        var tryCoordinate = [];
+
+        // 原始坐标数组
+        var coordinate = this.coordinateInfo.coordinate;
+
+        // 原始坐标零点索引
+        var originIdx = this.coordinateInfo.originIdx;
 
         // 圆心坐标
         var oldOrigin = coordinate[originIdx];
@@ -73,66 +127,50 @@ var block = (function() {
 
                 // 转化坐标
                 var newer = _transform(old, newOrigin);
-
-                block.els[i].style.top = newer[0] + "px";
-                block.els[i].style.left = newer[1] + "px";
-
-                // 同步坐标
-                coordinate[i].x = newer[1];
-                coordinate[i].y = newer[0];
+                tryCoordinate.push({x: newer[1], y: newer[0]});
+            }
+            else {
+                tryCoordinate.push({x: coordinate[i].x, y: coordinate[i].y});
             }
         }
+        return tryCoordinate;
     };
 
-    // 向左移动
-    var left = function(block) {
-        var coordinate = block.coordinateInfo.coordinate;
-        for (var i = 0; i < block.els.length; i++) {
-            var curX = parseInt(block.els[i].style.left.slice(0, -2)) - 20;
-            block.els[i].style.left = curX + "px";
-
-            // 同步更新坐标
-            coordinate[i].x = curX;
+    // 尝试移动
+    this.tryMove = function(direction) {
+        var coordinate = this.coordinateInfo.coordinate;
+        var tryCoordinate = [];
+        for (var i = 0; i < coordinate.length; i++) {
+            switch(direction) {
+                case "right":
+                    tryCoordinate.push({x: coordinate[i].x + 20, y: coordinate[i].y}); break;
+                case "left":
+                    tryCoordinate.push({x: coordinate[i].x - 20, y: coordinate[i].y}); break;
+                case "down":
+                    tryCoordinate.push({x: coordinate[i].x, y: coordinate[i].y + 20}); break;
+            }
         }
+        return tryCoordinate;
     };
 
-    // 向右移动
-    var right = function(block) {
-        var coordinate = block.coordinateInfo.coordinate;
-        for (var i = 0; i < block.els.length; i++) {
-            var curX = parseInt(block.els[i].style.left.slice(0, -2)) + 20;
-            block.els[i].style.left = curX + "px";
-
-            // 同步更新坐标
-            coordinate[i].x = curX;
-        }
-    };
-
-    // 向下移动
-    var down = function(block, maxHeight) {
-        var coordinate = block.coordinateInfo.coordinate;
-
-        // 根据最后一个元素进行边界检查
-        var lastEl = coordinate[coordinate.length - 1];
-        if (lastEl.y >= maxHeight - 20) {
-            return;
+    // 发生移动
+    this.move = function(tryCoordinate, direction) {
+        for (var i = 0; i < tryCoordinate.length; i++) {
+            switch(direction) {
+                case "down":
+                    this.els[i].style.top = tryCoordinate[i].y + "px"; break;
+                case "left":
+                    this.els[i].style.left = tryCoordinate[i].x + "px"; break;
+                case "right":
+                    this.els[i].style.left = tryCoordinate[i].x + "px"; break;
+            }
         }
 
-        for (var i = 0; i < block.els.length; i++) {
-            var curY = parseInt(block.els[i].style.top.slice(0, -2)) + 20;
-
-            block.els[i].style.top = curY + "px";
-
-            // 同步更新坐标
-            coordinate[i].y = curY;
+        // 同步更新坐标
+        var coordinate = this.coordinateInfo.coordinate;
+        for (var i = 0; i < coordinate.length; i++) {
+            coordinate[i].x = tryCoordinate[i].x;
+            coordinate[i].y = tryCoordinate[i].y;
         }
     };
-
-    return {
-        create: create,
-        left: left,
-        up: up,
-        right: right,
-        down: down
-    };
-})();
+};
