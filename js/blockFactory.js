@@ -85,8 +85,7 @@ var blockFactory = (function(Block) {
 
     // 随机产生一个颜色
     var _randomColor = function() {
-        console.log(Math.floor((Math.random() * 1000)));
-        return "#" + Math.floor((Math.random() * 1000));
+        return "#" + Math.floor(Math.random() * (999 - 100) + 100);
     };
 
     // 创建一个随机形状的块(工厂模式)
