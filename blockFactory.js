@@ -7,8 +7,7 @@ var blockFactory = (function(Block) {
     // 随机产生一组坐标
     // rotate：旋转方式，0-不转，1-正常顺时针，2-先顺再逆
     var _randomCoordinate = function() {
-        //Math.floor((Math.random() * 10))
-        switch(3) {
+        switch(Math.floor((Math.random() * 10))) {
 
             // Z形
             case 0:
@@ -42,14 +41,51 @@ var blockFactory = (function(Block) {
                     rotate: 2
                 };
 
+            // 小正方形
+            case 4:
+                return {
+                    coordinate: [{x: 0, y: 0}, {x: 20, y: 0}, {x: 0, y: 20}, {x: 20, y: 20}],
+                    originIdx: 0,
+                    rotate: 3
+                };
+
+            // 大正方形
+            case 5:
+                return {
+                    coordinate: [{x: 0, y: 0}, {x: 20, y: 0}, {x: 40, y: 0}, {x: 0, y: 20}, {x: 20, y: 20}, {x: 40, y: 20}, {x: 0, y: 40}, {x: 20, y: 40}, {x: 40, y: 40}],
+                    originIdx: 4,
+                    rotate: 1
+                };
+
+            // 点
+            case 6:
+                return {
+                    coordinate: [{x: 0, y: 0}],
+                    originIdx: 0,
+                    rotate: 3
+                };
+
+            // L形
+            case 7:
+                return {
+                    coordinate: [{x: 0, y: 0}, {x: 0, y: 20}, {x: 20, y: 20}, {x: 40, y: 20}],
+                    originIdx: 2,
+                    rotate: 1
+                };
+
             // 默认为短一形
             default:
-                return {coordinate: [{x: 0, y: 0}, {x: 20, y: 0}, {x: 40, y: 0}], originIdx: 1};
+                return {
+                    coordinate: [{x: 0, y: 0}, {x: 20, y: 0}, {x: 40, y: 0}],
+                    originIdx: 1,
+                    rotate: 1
+                };
         }
     };
 
     // 随机产生一个颜色
     var _randomColor = function() {
+        console.log(Math.floor((Math.random() * 1000)));
         return "#" + Math.floor((Math.random() * 1000));
     };
 
@@ -64,7 +100,9 @@ var blockFactory = (function(Block) {
             el.className = "t-element";
             el.style.left =  coordinate[i].x + "px";
             el.style.top =  coordinate[i].y + "px";
-            el.style.backgroundColor = _randomColor();
+            var x = _randomColor();
+            console.log(x);
+            $(el).css("background", x);
             els.push(el);
         }
 

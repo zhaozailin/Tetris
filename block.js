@@ -5,6 +5,9 @@ var Block = function(els, coordinateInfo) {
     this.els = els;
     this.coordinateInfo = coordinateInfo;
 
+    // 上一次旋转类型（默认为逆时针），-1：逆时针，1：顺时针
+    this.lastRotateType = -1;
+
     // 获取最左边元素坐标
     var _getLeftCoordinate = function() {
         var coordinate = coordinateInfo.coordinate;
@@ -50,11 +53,20 @@ var Block = function(els, coordinateInfo) {
     // 转化逻辑：根据转动圆心的坐标算出相对圆心的相对坐标，然后通过公式：(a,b)-->(b,-a)，最后通过加上圆心坐标算出最终的坐标
     // coord：待转化的坐标
     // origin：圆心坐标
-    var _transform = function(old, origin) {
-        var tmp = [old[1] - origin[1], origin[0] - old[0]];
+    // type: -1为逆时针，1为顺时针
+    var _transform = function(old, origin, type) {
+        if (type === 1) {
+            var tmp = [old[1] - origin[1], origin[0] - old[0]];
 
-        // 最后left要-20，因为原本以x渲染block，最后以x-20渲染block，渲染基点发生变化
-        return [tmp[0] + origin[0], tmp[1] + origin[1] - 20];
+            // 最后left要-20，因为原本以x渲染block，最后以x-20渲染block，渲染基点发生变化
+            return [tmp[0] + origin[0], tmp[1] + origin[1] - 20];
+        }
+        else {
+            var tmp = [origin[1] - old[1], old[0] - origin[0]];
+
+            // 最后left要-20，因为原本以x渲染block，最后以x-20渲染block，渲染基点发生变化
+            return [tmp[0] + origin[0] - 20, tmp[1] + origin[1]];
+        }
     };
 
     // 变形
@@ -105,6 +117,11 @@ var Block = function(els, coordinateInfo) {
         this.bottomCoordinate = coordinate[bottomIdx];
         this.rightCoordinate = coordinate[rightIdx];
         this.leftCoordinate = coordinate[leftIdx];
+
+        // 设置最新一次的旋转类型
+        if (this.coordinateInfo.rotate === 2) {
+            this.lastRotateType = -this.lastRotateType;
+        }
     };
 
     // 尝试变形
@@ -126,13 +143,25 @@ var Block = function(els, coordinateInfo) {
                 var old = [coordinate[i].y, coordinate[i].x];
 
                 // 转化坐标
-                var newer = _transform(old, newOrigin);
+                var newer = null;
+
+                // 正常顺时针
+                if (this.coordinateInfo.rotate === 1) {
+                    newer = _transform(old, newOrigin, 1);
+                }
+
+                // 先正再逆
+                else if (this.coordinateInfo.rotate === 2) {
+                    newer = _transform(old, newOrigin, -this.lastRotateType);
+                }
+
                 tryCoordinate.push({x: newer[1], y: newer[0]});
             }
             else {
                 tryCoordinate.push({x: coordinate[i].x, y: coordinate[i].y});
             }
         }
+
         return tryCoordinate;
     };
 

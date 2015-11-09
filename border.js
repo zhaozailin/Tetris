@@ -42,7 +42,7 @@ var border = (function(blockFactory) {
         // 向下移动到达底线或发生碰撞时创建新的方块实例
         if (direction === "down" && (boundaryCheck || _checkEncounter(tryCoordinate))) {
             _insertFallBlocks(block);
-            console.log(fallBlocks);
+
             // 检测满行
             _handleFullRow(block);
 
@@ -110,8 +110,6 @@ var border = (function(blockFactory) {
                 fullYs.push(curY);
             }
         }
-
-        console.log(rowNum);
 
         // 满行以上的元素下降20 * rowNum像素
         if (rowNum > 0) {
@@ -191,6 +189,11 @@ var border = (function(blockFactory) {
 
     // 改变形状
     var changeShape = function(block) {
+
+        // 不变形的类型
+        if (block.coordinateInfo.rotate === 3) {
+            return;
+        }
 
         // 尝试改变
         var tryCoordinate = block.tryChange();
