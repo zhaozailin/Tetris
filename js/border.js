@@ -3,8 +3,14 @@
  */
 var border = (function(blockFactory) {
 
+    // 定时器
+    var timer = null;
+
+    // 总分
+    var totalScore = 0;
+
     var config = {
-        maxHeight: 280,
+        maxHeight: 380,
         minWidth: 0,
         maxWidth: 200
     };
@@ -20,6 +26,17 @@ var border = (function(blockFactory) {
         for (var i = 0; i < block.els.length; i++) {
             fallBlocks.push({el: block.els[i], coordinate: coordinate[i]});
         }
+    };
+
+    // 检测是否game over
+    var _checkGameOver = function(block) {
+        var coordinate = block.coordinateInfo.coordinate;
+        for (var i = 0; i < coordinate.length; i++) {
+            if (coordinate[i].y < 60) {
+                return true;
+            }
+        }
+        return false;
     };
 
     // 触发移动
@@ -46,7 +63,16 @@ var border = (function(blockFactory) {
             // 检测满行
             _handleFullRow(block);
 
+            // 检测是否game over
+            if (_checkGameOver(block)) {
+                clearInterval(timer);
+                alert("game over");
+                return;
+            }
+
+            // 创建一个新的方块
             _renderBlock();
+
             return;
         }
 
@@ -126,6 +152,10 @@ var border = (function(blockFactory) {
                     tmpBlock.el.style.top = tmpCoordinate.y + "px";
                 }
             }
+
+            // 累计得分
+            totalScore += 10 * rowNum;
+            $(".t-score").html(totalScore);
         }
     };
 
@@ -225,6 +255,9 @@ var border = (function(blockFactory) {
     // 初始化
     var init = function() {
 
+        // 创建第一个方块
+        blockFactory.createFirst();
+
         // 渲染一个方块实例
         _renderBlock();
 
@@ -242,6 +275,11 @@ var border = (function(blockFactory) {
                     move(activeBlock, "down"); break;
             }
         });
+
+        // 设置定时器
+        timer = setInterval(function() {
+            move(activeBlock, "down")
+        }, 1000);
     };
 
     return {

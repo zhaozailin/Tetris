@@ -88,8 +88,8 @@ var blockFactory = (function(Block) {
         return "#" + Math.floor(Math.random() * (999 - 100) + 100);
     };
 
-    // 创建一个随机形状的块(工厂模式)
-    var create = function() {
+    // 构建一个block块
+    var _buildBlock = function() {
         var coordinateInfo = _randomCoordinate();
         var coordinate = coordinateInfo.coordinate;
 
@@ -100,7 +100,6 @@ var blockFactory = (function(Block) {
             el.style.left =  coordinate[i].x + "px";
             el.style.top =  coordinate[i].y + "px";
             var x = _randomColor();
-            console.log(x);
             $(el).css("background", x);
             els.push(el);
         }
@@ -108,7 +107,44 @@ var blockFactory = (function(Block) {
         return new Block(els, coordinateInfo);
     };
 
+    // 调整位置
+    var _adjustPosition = function(curBlock) {
+        var coordinate = curBlock.coordinateInfo.coordinate;
+        var els = curBlock.els;
+        for (var i = 0; i < coordinate.length; i++) {
+            coordinate[i].x += 60;
+            coordinate[i].y += 40;
+            els[i].style.left =  coordinate[i].x + "px";
+            els[i].style.top =  coordinate[i].y + "px";
+        }
+    };
+
+    // 下一个方块
+    var nextBlock = null;
+
+    // 创建一个随机形状的块(工厂模式)
+    var create = function() {
+        var curBlock = nextBlock;
+
+        // 调整开始位置
+        _adjustPosition(curBlock);
+
+        // 构建下一个方块
+        nextBlock = _buildBlock();
+
+        // 预览
+        $(".t-preview").html(nextBlock.els);
+
+        return curBlock;
+    };
+
+    // 创建第一个方块
+    var createFirst = function() {
+        nextBlock = _buildBlock();
+    };
+
     return {
-        create: create
+        create: create,
+        createFirst: createFirst
     };
 })(Block);
