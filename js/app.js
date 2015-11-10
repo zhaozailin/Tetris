@@ -3,6 +3,17 @@
  */
 $(document).ready(function() {
 
-    // ³õÊ¼»¯ÓÎÏ·
+    // å…¼å®¹IE8çš„indexOf
+    if (!Array.prototype.indexOf) {
+        Array.prototype.indexOf = function (el) {
+            for (var i = 0; i < this.length; i++) {
+                if (this[i] === el) {
+                    return i;
+                }
+            }
+            return -1;
+        };
+    }
+
     border.init();
 });

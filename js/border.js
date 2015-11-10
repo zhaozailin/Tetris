@@ -276,10 +276,21 @@ var border = (function(blockFactory) {
             }
         });
 
-        // 设置定时器
-        timer = setInterval(function() {
-            move(activeBlock, "down")
-        }, 1000);
+        // 监听开始
+        $("button[name=start]").click(function() {
+            $(this).attr("disabled", "disabled");
+            $("button[name=stop]").attr("disabled", false);
+            timer = setInterval(function() {
+                move(activeBlock, "down")
+            }, 700);
+        });
+
+        // 监听暂停
+        $("button[name=stop]").click(function() {
+            $(this).attr("disabled", "disabled");
+            $("button[name=start]").attr("disabled", false);
+            clearInterval(timer);
+        });
     };
 
     return {
