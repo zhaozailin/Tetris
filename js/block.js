@@ -96,17 +96,17 @@ var Block = function(els, coordinateInfo) {
                 coordinate[i].x = tryCoordinate[i].x;
                 coordinate[i].y = tryCoordinate[i].y;
 
-                if (coordinate[i].y > bottomY) {
+                if (coordinate[i].y >= bottomY) {
                     bottomIdx = i;
                     bottomY = coordinate[i].y;
                 }
 
-                if (coordinate[i].x > rightX) {
+                if (coordinate[i].x >= rightX) {
                     rightIdx = i;
                     rightX = coordinate[i].x;
                 }
 
-                if (coordinate[i].x < leftX) {
+                if (coordinate[i].x <= leftX) {
                     leftIdx = i;
                     leftX = coordinate[i].x;
                 }

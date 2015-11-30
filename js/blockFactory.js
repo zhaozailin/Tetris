@@ -5,7 +5,7 @@
 var blockFactory = (function(Block) {
 
     // 随机产生一组坐标
-    // rotate：旋转方式，0-不转，1-正常顺时针，2-先顺再逆
+    // rotate：旋转方式，1-正常顺时针，2-先顺再逆，3-不转
     var _randomCoordinate = function() {
         switch(Math.floor((Math.random() * 10))) {
 
