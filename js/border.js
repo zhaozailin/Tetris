@@ -12,7 +12,8 @@ var border = (function(blockFactory) {
     var config = {
         maxHeight: 380,
         minWidth: 0,
-        maxWidth: 200
+        maxWidth: 200,
+        speed: 400
     };
 
     var activeBlock = null;
@@ -282,7 +283,7 @@ var border = (function(blockFactory) {
             $("button[name=stop]").attr("disabled", false);
             timer = setInterval(function() {
                 move(activeBlock, "down")
-            }, 700);
+            }, config.speed);
         });
 
         // 监听暂停
